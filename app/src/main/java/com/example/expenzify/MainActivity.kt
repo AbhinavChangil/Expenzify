@@ -17,11 +17,11 @@ import com.example.expenzify.ui.theme.ExpenzifyTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
         setContent {
             ExpenzifyTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    AddExpenseScreen()
+                    HomeScreen()
                 }
             }
         }
