@@ -181,7 +181,7 @@ fun TransactionList(modifier: Modifier, list: List<ExpenseEntity>, viewModel: Ho
     LazyColumn(modifier = modifier.padding(horizontal = 10.dp)){
         items(list){ item->
             TransactionItem(
-                name = item.name!!,
+                name = item.title!!,
                 amount = "₹${"%.2f".format(item.amount)}",
                 icon = viewModel.getItemIcon(item),
                 date = item.date.toString(),

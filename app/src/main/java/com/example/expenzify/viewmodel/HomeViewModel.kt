@@ -55,7 +55,7 @@ class HomeViewModel(dao: ExpenseDao) : ViewModel() {
         } else if(item.category == "Transport"){
             return R.drawable.ic_female
         }
-        return R.drawable.ic_paypal
+        return R.drawable.ic_starbucks
     }
 }
 
