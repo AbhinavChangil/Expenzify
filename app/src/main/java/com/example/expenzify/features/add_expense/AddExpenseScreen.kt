@@ -1,19 +1,14 @@
-package com.example.expenzify
+package com.example.expenzify.features.add_expense
 
 import android.annotation.SuppressLint
-import android.app.DatePickerDialog
-import android.graphics.drawable.Drawable
 import android.os.Build
-import android.os.SystemClock
 import android.util.Log
-import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,12 +22,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -43,21 +36,17 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.FocusRequester.Companion.createRefs
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -69,22 +58,22 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.expenzify.R
+import com.example.expenzify.Utils
 import com.example.expenzify.data.model.ExpenseEntity
-import com.example.expenzify.ui.theme.AcmeFont
 import com.example.expenzify.ui.theme.DarkBlue
 import com.example.expenzify.ui.theme.DarkGreen
 import com.example.expenzify.ui.theme.DarkRed
 import com.example.expenzify.viewmodel.AddExpenseViewModel
 import com.example.expenzify.viewmodel.AddExpenseViewModelFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 
 @Composable
-fun AddExpenseScreen(){
+fun AddExpenseScreen(navController: NavController){
     val context = LocalContext.current
     // use View Model
     val viewModel = AddExpenseViewModelFactory(LocalContext.current)
@@ -109,7 +98,7 @@ fun AddExpenseScreen(){
             // Add topBar
             Box(modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 45.dp, start = 16.dp, end = 16.dp)
+                .padding(top = 30.dp, start = 16.dp, end = 16.dp)
                 .constrainAs(nameRow) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
@@ -118,7 +107,11 @@ fun AddExpenseScreen(){
             ){
 
                 Image(painter = painterResource(id = R.drawable.ic_left_arrow), contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterStart),
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .clickable{
+                            navController.popBackStack()
+                        },
                             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.Black)
                 )
 
@@ -148,13 +141,12 @@ fun AddExpenseScreen(){
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
                 }, onAddTransactionClick = {
-                    // Launch a coroutine to call addExpense
-                Log.d("AddExpenseScreen1", "Adding expense: $it")
                 coroutineScope.launch {
-                    Log.d("AddExpenseScreen2", "Adding expense: $it")
                     val success = viewModel.addExpense(it)
                     if (!success) {
                         Toast.makeText(context, "Failed to add transaction", Toast.LENGTH_SHORT).show()
+                    }else{
+                        navController.popBackStack()
                     }
                 }
             }
@@ -168,12 +160,22 @@ fun AddExpenseScreen(){
 @Composable
 fun DataForm(modifier: Modifier, onAddTransactionClick : (model: ExpenseEntity)->Unit){
 
+    //Data states
     val type = remember { mutableStateOf("Income") }
     val name = remember { mutableStateOf("") }
     val amount = remember { mutableStateOf("") }
     val date = remember { mutableStateOf(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())}
     val category = remember { mutableStateOf("")}
     val description = remember { mutableStateOf("")}
+
+    // Error states
+    val nameError = remember { mutableStateOf<String?>(null) }
+    val amountError = remember { mutableStateOf<String?>(null) }
+    val dateError = remember { mutableStateOf<String?>(null) }
+    val categoryError = remember { mutableStateOf<String?>(null) }
+
+
+
     val dateDialogVisibility = remember {
         mutableStateOf(false)
     }
@@ -196,13 +198,19 @@ fun DataForm(modifier: Modifier, onAddTransactionClick : (model: ExpenseEntity)-
         //Add TextField for Title
         TextInputLayout(label = "Title", value = name.value, onValueChange = {
             name.value = it
-        })
+            nameError.value = null // Clear error when user starts typing
+        },
+            errorText = nameError.value
+        )
         Spacer(modifier = Modifier.size(20.dp))
 
         //Add TextField for Amount
         TextInputLayout(label = "Amount", value = amount.value, onValueChange = {
             amount.value = it
-        })
+            amountError.value = null // Clear error when user starts typing
+        },
+            errorText = amountError.value
+        )
         Spacer(modifier = Modifier.size(20.dp))
 
         //Add Date for Date
@@ -211,7 +219,8 @@ fun DataForm(modifier: Modifier, onAddTransactionClick : (model: ExpenseEntity)-
              value = Utils.dateFormatToHumanReadableFormat(date.value),
              onValueChange = {},
              onIconClick = {dateDialogVisibility.value = true},
-             enabled = false
+             enabled = false,
+             errorText = dateError.value
          )
         Spacer(modifier = Modifier.size(20.dp))
 
@@ -219,8 +228,10 @@ fun DataForm(modifier: Modifier, onAddTransactionClick : (model: ExpenseEntity)-
         CustomDropDown(listOfItems = listOf("Netflix", "Paypal", "Upwork", "Salary", "Freelance", "Work", "Transport"),
             onItemSelected = {
                 category.value = it
+                categoryError.value = null // Clear error when user selects a category
             },
-            label = "Category"
+            label = "Category",
+            errorText = categoryError.value
         )
         Spacer(modifier = Modifier.size(20.dp))
 
@@ -237,21 +248,50 @@ fun DataForm(modifier: Modifier, onAddTransactionClick : (model: ExpenseEntity)-
             text = "Add Transaction",
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .background(DarkBlue),
+                .clip(RoundedCornerShape(10.dp)),
             onClick = {
-                val expense = ExpenseEntity(
-                    id = null,
-                    type = type.value,
-                    title = name.value,
-                    amount = amount.value.toDouble(),
-                    date = Utils.dateFormatToHumanReadableFormat(date.value),
-                    category = category.value,
-                    description = description.value
-                )
 
-                Log.d("AddExpenseScreen1", "Adding expense: $expense")
-                onAddTransactionClick(expense)
+
+                fun validateFields(): Boolean {
+                    var isValid = true
+
+                    when {
+                        name.value.isBlank() -> {
+                            nameError.value = "Title is required"
+                            isValid = false
+                        }
+                        amount.value.isBlank() -> {
+                            amountError.value = "Amount is required"
+                            isValid = false
+                        }
+                        Utils.dateFormatToHumanReadableFormat(date.value).isBlank() -> {
+                            dateError.value = "Date is required"
+                            isValid = false
+                        }
+                        category.value.isBlank() -> {
+                            categoryError.value = "Category is required"
+                            isValid = false
+                        }
+                    }
+
+                    return isValid
+
+                }
+
+                if(validateFields()) {
+                    val expense = ExpenseEntity(
+                        id = null,
+                        type = type.value,
+                        title = name.value,
+                        amount = amount.value.toDouble(),
+                        date = date.value,
+                        category = category.value,
+                        description = description.value
+                    )
+
+                    Log.d("Upload Data", "Adding expense: $expense")
+                    onAddTransactionClick(expense)
+                }
             },
             bgColor = DarkBlue,
             textColor = Color.White,
@@ -268,11 +308,13 @@ fun DataForm(modifier: Modifier, onAddTransactionClick : (model: ExpenseEntity)-
                         },
             onDateSelected = {
             date.value = it
+                dateError.value = null // Clear error when a date is selected
             dateDialogVisibility.value = false
             }
         )
     }
 }
+
 
 
 @Composable
@@ -559,5 +601,5 @@ fun CustomDropDown(listOfItems: List<String>,
 @Composable
 @Preview(showBackground = true)
 fun PreviewAddExpenseScreen(){
-    AddExpenseScreen()
+    AddExpenseScreen(rememberNavController())
 }

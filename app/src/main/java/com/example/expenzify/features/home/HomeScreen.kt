@@ -1,7 +1,9 @@
-package com.example.expenzify
+package com.example.expenzify.features.home
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -21,7 +24,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -31,6 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.expenzify.R
+import com.example.expenzify.Utils
 import com.example.expenzify.data.model.ExpenseEntity
 import com.example.expenzify.ui.theme.DarkBlue
 import com.example.expenzify.ui.theme.DarkGreen
@@ -39,7 +45,7 @@ import com.example.expenzify.viewmodel.HomeViewModel
 import com.example.expenzify.viewmodel.HomeViewModelFactory
 
 @Composable
-fun HomeScreen(){
+fun HomeScreen(navController: NavController){
 
     val viewModel : HomeViewModel = HomeViewModelFactory(LocalContext.current)
         .create(HomeViewModel::class.java)
@@ -47,7 +53,9 @@ fun HomeScreen(){
     // UI for home screen
     Surface(modifier = Modifier.fillMaxSize()){
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-            val (nameRow,list, card, recentTv, topBar) = createRefs()
+
+            val (nameRow,list, card, recentTv, topBar, addButton) = createRefs()
+
             Image(painter = painterResource(id = R.drawable.ic_topbar), contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,11 +110,13 @@ fun HomeScreen(){
                 },
                 balance, income, expenses
             )
-            Box(modifier = Modifier.fillMaxWidth().constrainAs(recentTv){
-                top.linkTo(card.bottom)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            }) {
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .constrainAs(recentTv) {
+                    top.linkTo(card.bottom)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }) {
                 Text(
                     text = "Recent Transaction",
                     fontSize = 18.sp,
@@ -128,7 +138,8 @@ fun HomeScreen(){
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
                     height = Dimension.fillToConstraints
-                }, list = state.value, viewModel)
+                }, list = state.value, viewModel
+            )
         }
     }
 }
@@ -184,7 +195,7 @@ fun TransactionList(modifier: Modifier, list: List<ExpenseEntity>, viewModel: Ho
                 name = item.title!!,
                 amount = "₹${"%.2f".format(item.amount)}",
                 icon = viewModel.getItemIcon(item),
-                date = item.date.toString(),
+                date = Utils.dateFormatToHumanReadableFormat(item.date).toString(),
                 color = if(item.type == "Income") DarkGreen else DarkRed
             )
         }
@@ -236,5 +247,5 @@ fun TransactionItem(name: String, amount: String, icon: Int, date: String, color
 @Composable
 @Preview(showBackground = true)
 fun PreviewHomeScreen(){
-    HomeScreen()
+    HomeScreen(rememberNavController())
 }

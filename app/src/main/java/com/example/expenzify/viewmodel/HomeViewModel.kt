@@ -20,7 +20,11 @@ class HomeViewModel(dao: ExpenseDao) : ViewModel() {
                 total -= it.amount
             }
         }
-        return "₹${"%.2f".format(total)}"
+        if(total < 0){
+            return "- ₹${"%.2f".format(total)}"
+        }else{
+            return "₹${"%.2f".format(total)}"
+        }
     }
 
     fun getTotalExpenses(list: List<ExpenseEntity>) : String{

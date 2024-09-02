@@ -4,5 +4,7 @@
     <style name="Theme.Expenzify" parent="android:Theme.Material.Light.NoActionBar">
         <!-- Status bar color. -->
         <item name="android:statusBarColor">#DE601A</item>
+        <item name="android:navigationBarColor">#ffffff</item>
+        <item name="android:windowBackground">#C7EEFF</item>
     </style>
 </resources>
