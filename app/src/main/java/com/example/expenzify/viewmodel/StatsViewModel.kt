@@ -17,19 +17,37 @@ import com.example.expenzify.features.add_expense.AddExpenseScreen
 import com.example.expenzify.features.stats.StatsScreen
 import com.github.mikephil.charting.data.Entry
 
+
 class StatsViewModel(expenseDao: ExpenseDao): ViewModel() {
+    val topExpenseList = expenseDao.getTopExpensesByType("Expense")
+    val topIncomeList = expenseDao.getTopExpensesByType("Income")
+    val topTransactionList = expenseDao.getTopTransactions()
     val expenseEntries = expenseDao.getAllExpensesByDate("Expense")
+    val incomeEntries = expenseDao.getAllExpensesByDate("Income")
 
-    fun getEntriesForChart(entries: List<ExpenseSummary>):List<Entry> {
+    fun getExpenseEntriesForChart(entries: List<ExpenseSummary>): List<Entry> {
+        return entries.map { Entry(it.date.toFloat(), it.total_amount.toFloat()) }
+    }
 
-        val listOfEntries = mutableListOf<Entry>()
-        for(entry in entries) {
-            val formattedDate = entry.date
-            listOfEntries.add(Entry(formattedDate.toFloat(), entry.total_amount.toFloat()))
+    fun getIncomeEntriesForChart(entries: List<ExpenseSummary>): List<Entry> {
+        return entries.map { Entry(it.date.toFloat(), it.total_amount.toFloat()) }
+    }
+
+    fun getBalanceEntriesForChart(expenseEntries: List<ExpenseSummary>, incomeEntries: List<ExpenseSummary>): List<Entry> {
+        val balanceEntries = mutableListOf<Entry>()
+        val expensesMap = expenseEntries.associateBy { it.date }
+        val incomesMap = incomeEntries.associateBy { it.date }
+
+        expensesMap.forEach { (date, expense) ->
+            val income = incomesMap[date]?.total_amount ?: 0f
+            val balance = income.toDouble() - expense.total_amount
+            balanceEntries.add(Entry(date.toFloat(), balance.toFloat()))
         }
-        return listOfEntries
+
+        return balanceEntries
     }
 }
+
 
 class StatsViewModelFactory(private val context: Context) : ViewModelProvider.Factory{
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

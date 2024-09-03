@@ -140,8 +140,8 @@ fun BottomAppBarWithFAB(navController: NavController, items: List<NavItem>) {
                                 selectedIconColor = Color.White,
                                 selectedTextColor = DarkBlue,
                                 indicatorColor = DarkBlue,
-                                unselectedIconColor = Color.Gray,
-                                unselectedTextColor = Color.Gray
+                                unselectedIconColor = Color.Black,
+                                unselectedTextColor = Color.Black
                             )
                         )
                     }

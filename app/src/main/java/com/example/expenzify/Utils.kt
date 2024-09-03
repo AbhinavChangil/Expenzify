@@ -54,15 +54,18 @@ object Utils {
         return date.time
     }
 
-    fun getItemIcon(item: ExpenseEntity): Int {
-        return if (item.title == "Paypal") {
-            R.drawable.ic_paypal
-        } else if (item.title == "Netflix") {
-            R.drawable.ic_netflix
-        } else if (item.title == "Starbucks") {
-            R.drawable.ic_starbucks
-        } else {
-            R.drawable.ic_upwork
+    fun getItemIcon(item: ExpenseEntity) : Int{
+        if(item.category == "Salary"){
+            return R.drawable.ic_netflix
+        } else if(item.category == "Freelance"){
+            return R.drawable.ic_paypal
+        } else if(item.category == "Work"){
+            return R.drawable.ic_upwork
+        } else if(item.category == "Netflix"){
+            return R.drawable.ic_netflix
+        } else if(item.category == "Transport"){
+            return R.drawable.ic_female
         }
+        return R.drawable.ic_starbucks
     }
 }
